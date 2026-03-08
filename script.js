@@ -25,7 +25,37 @@ document.addEventListener("DOMContentLoaded", function(){
     if(!document.getElementById('issueModal')) {
         createModal();
     }
+
+    // Google Fonts এবং Font Awesome যোগ করি
+    addFontsAndIcons();
 });
+
+// =====================================================================
+// ফন্ট এবং আইকন যোগ করার ফাংশন
+// =====================================================================
+
+function addFontsAndIcons() {
+    // Google Fonts
+    const fontLink = document.createElement('link');
+    fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap';
+    fontLink.rel = 'stylesheet';
+    document.head.appendChild(fontLink);
+
+    // Font Awesome
+    const faLink = document.createElement('link');
+    faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css';
+    faLink.rel = 'stylesheet';
+    document.head.appendChild(faLink);
+
+    // Base style
+    const style = document.createElement('style');
+    style.textContent = `
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+    `;
+    document.head.appendChild(style);
+}
 
 // =====================================================================
 // ২. লগিন ফাংশন
@@ -100,7 +130,7 @@ function displayIssues(issues) {
         // সার্কেল বর্ডার কালার
         const circleBorderColor = isHighOrMedium ? 'border-emerald-500' : 'border-purple-500';
         
-        // priority ব্যাজের স্টাইল
+        // priority ব্যাজের স্টাইল (আইকন সরানো হয়েছে)
         let priorityBadgeClass = '';
         let priorityText = issue.priority;
         
@@ -112,20 +142,34 @@ function displayIssues(issues) {
             priorityBadgeClass = 'bg-slate-100 text-slate-400';
         }
         
-        // স্ট্যাটাস ব্যাজ (open/closed)
-        let statusBadgeClass = '';
-        if(issue.status === 'open') {
-            statusBadgeClass = 'bg-emerald-50 text-emerald-600';
+        // স্ট্যাটাস ইমেজ - priority অনুযায়ী (High/Medium = Open-Status.png, Low = Closed-Status.png)
+        // এবং এটা দেখাবে কার্ডের বাম পাশের ইমোজির জায়গায়
+        let statusImage = '';
+        let circleImage = '';
+        
+        if(isHighOrMedium) {
+            statusImage = 'assets/Open-Status.png';
         } else {
-            statusBadgeClass = 'bg-purple-50 text-purple-600';
+            statusImage = 'assets/Closed- Status .png';
         }
         
-        // লেবেলগুলোর জন্য ব্যাজ স্টাইল
+        // লেবেলগুলোর জন্য ব্যাজ স্টাইল - Font Awesome আইকন সহ
+        const labelIcons = {
+            'bug': '<i class="fas fa-bug mr-1"></i>',
+            'help wanted': '<i class="fas fa-handshake-angle mr-1"></i>',
+            'feature': '<i class="fas fa-star mr-1"></i>',
+            'documentation': '<i class="fas fa-book mr-1"></i>',
+            'enhancement': '<i class="fas fa-plus-circle mr-1"></i>',
+            'question': '<i class="fas fa-question-circle mr-1"></i>'
+        };
+        
         const labelColors = {
             'bug': 'bg-red-50 text-red-500 border-red-100',
             'help wanted': 'bg-amber-50 text-amber-600 border-amber-100',
             'feature': 'bg-blue-50 text-blue-500 border-blue-100',
-            'documentation': 'bg-purple-50 text-purple-500 border-purple-100'
+            'documentation': 'bg-purple-50 text-purple-500 border-purple-100',
+            'enhancement': 'bg-green-50 text-green-600 border-green-100',
+            'question': 'bg-gray-50 text-gray-600 border-gray-100'
         };
         
         return `
@@ -137,14 +181,15 @@ function displayIssues(issues) {
             <div class="p-5">
                 <!-- হেডার section -->
                 <div class="flex justify-between items-center mb-4">
+                    <!-- বাম পাশের সার্কেলের জায়গায় Status ইমেজ -->
                     <div class="w-8 h-8 rounded-full ${circleBgColor} flex items-center justify-center">
-                        <div class="w-4 h-4 rounded-full border-2 border-dashed ${circleBorderColor}"></div>
+                        <img src="${statusImage}" class="w-5 h-5" alt="status">
                     </div>
                     <div class="flex gap-2">
-                        <!-- Priority ব্যাজ -->
-                        <span class="${priorityBadgeClass} text-[11px] font-bold px-4 py-1 rounded-full uppercase">${priorityText}</span>
-                        <!-- Status ব্যাজ -->
-                        <span class="${statusBadgeClass} text-[11px] font-bold px-4 py-1 rounded-full uppercase">${issue.status}</span>
+                        <!-- Priority ব্যাজ (শুধু টেক্সট, আইকন নেই) -->
+                        <span class="${priorityBadgeClass} text-[11px] font-bold px-4 py-1 rounded-full uppercase">
+                            ${priorityText}
+                        </span>
                     </div>
                 </div>
                 
@@ -158,20 +203,16 @@ function displayIssues(issues) {
                     ${issue.description.substring(0, 100)}...
                 </p>
                 
-                <!-- লেবেল section -->
+                <!-- লেবেল section - Font Awesome আইকন সহ -->
                 <div class="flex flex-wrap gap-2 mb-6">
                     ${issue.labels.map(label => {
                         const labelKey = label.toLowerCase();
                         const colorClass = labelColors[labelKey] || 'bg-gray-50 text-gray-500 border-gray-100';
-                        let emoji = '🏷️';
-                        if(labelKey === 'bug') emoji = '👹';
-                        else if(labelKey === 'help wanted') emoji = '🌐';
-                        else if(labelKey === 'feature') emoji = '✨';
-                        else if(labelKey === 'documentation') emoji = '📚';
+                        const icon = labelIcons[labelKey] || '<i class="fas fa-tag mr-1"></i>';
                         
                         return `
-                            <span class="${colorClass} text-[11px] px-3 py-1 rounded-full border font-medium">
-                                ${emoji} ${label.toUpperCase()}
+                            <span class="${colorClass} text-[11px] px-3 py-1 rounded-full border font-medium flex items-center">
+                                ${icon} ${label.toUpperCase()}
                             </span>
                         `;
                     }).join('')}
@@ -179,10 +220,14 @@ function displayIssues(issues) {
                 
                 <hr class="border-gray-100 -mx-5 mb-4">
                 
-                <!-- লেখক এবং তারিখ section -->
+                <!-- লেখক এবং তারিখ section - Font Awesome আইকন সহ -->
                 <div class="text-slate-400 text-sm">
-                    <p>#${issue.id} by ${issue.author}</p>
-                    <p>${new Date(issue.createdAt).toLocaleDateString('en-US')}</p>
+                    <p class="flex items-center gap-1">
+                        <i class="fas fa-hashtag text-xs"></i> ${issue.id} by ${issue.author}
+                    </p>
+                    <p class="flex items-center gap-1 mt-1">
+                        <i class="far fa-calendar-alt text-xs"></i> ${new Date(issue.createdAt).toLocaleDateString('en-US')}
+                    </p>
                 </div>
             </div>
         </div>
@@ -212,9 +257,10 @@ async function showIssueDetails(issueId) {
             createModal();
         }
         
-        // priority অনুযায়ী ব্যাজ স্টাইল
+        // priority অনুযায়ী ব্যাজ স্টাইল (আইকন সরানো হয়েছে)
         let priorityBadgeClass = '';
         let priorityText = issue.priority.toUpperCase();
+        
         if(issue.priority === 'high') {
             priorityBadgeClass = 'bg-red-500 text-white';
         } else if(issue.priority === 'medium') {
@@ -223,30 +269,58 @@ async function showIssueDetails(issueId) {
             priorityBadgeClass = 'bg-gray-500 text-white';
         }
         
-        // মডালের কন্টেন্ট সেট করি - আপনার দেওয়া HTML অনুযায়ী
+        // priority অনুযায়ী status ইমেজ নির্ধারণ (মডালের বাম পাশের জন্য)
+        const isHighOrMedium = issue.priority === 'high' || issue.priority === 'medium';
+        let statusImage = '';
+        
+        if(isHighOrMedium) {
+            statusImage = 'Open-Status.png';
+        } else {
+            statusImage = 'Closed-Status.png';
+        }
+        
+        // status এর জন্য bg color
+        let statusClass = isHighOrMedium ? 'bg-green-100' : 'bg-purple-100';
+        
+        // লেবেল আইকন
+        const labelIcons = {
+            'bug': '<i class="fas fa-bug mr-1"></i>',
+            'help wanted': '<i class="fas fa-handshake-angle mr-1"></i>',
+            'feature': '<i class="fas fa-star mr-1"></i>',
+            'documentation': '<i class="fas fa-book mr-1"></i>',
+            'enhancement': '<i class="fas fa-plus-circle mr-1"></i>',
+            'question': '<i class="fas fa-question-circle mr-1"></i>'
+        };
+        
+        // মডালের কন্টেন্ট সেট করি
         document.getElementById('modalContent').innerHTML = `
-            <!-- Issue Card - exactly as you provided -->
+            <!-- Issue Card -->
             <div class="bg-white w-full rounded-xl shadow-lg p-6">
                 <!-- Title -->
                 <h2 class="text-2xl font-semibold text-gray-800 mb-3">
                     ${issue.title}
                 </h2>
 
-                <!-- Status Row -->
+                <!-- Status Row - priority অনুযায়ী ইমেজ -->
                 <div class="flex items-center gap-3 text-sm text-gray-500 mb-4">
-                    <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
-                        ${issue.status === 'open' ? 'Opened' : 'Closed'}
+                    <span class="${statusClass} p-1 rounded-full flex items-center justify-center">
+                        <img src="${statusImage}" class="w-5 h-5" alt="status">
                     </span>
-                    <span>• Opened by <span class="font-medium text-gray-700">${issue.author}</span></span>
-                    <span>• ${new Date(issue.createdAt).toLocaleDateString('en-GB')}</span>
+                    <span class="flex items-center gap-1">
+                        <i class="far fa-user-circle"></i> Opened by <span class="font-medium text-gray-700">${issue.author}</span>
+                    </span>
+                    <span class="flex items-center gap-1">
+                        <i class="far fa-calendar-alt"></i> ${new Date(issue.createdAt).toLocaleDateString('en-GB')}
+                    </span>
                 </div>
 
-                <!-- Tags -->
-                <div class="flex gap-3 mb-4">
+                <!-- Tags - Font Awesome আইকন সহ -->
+                <div class="flex gap-3 mb-4 flex-wrap">
                     ${issue.labels.map(label => {
                         let bgColor = '';
                         let textColor = '';
                         let labelText = label.toUpperCase();
+                        let icon = labelIcons[label.toLowerCase()] || '<i class="fas fa-tag mr-1"></i>';
                         
                         if(label.toLowerCase() === 'bug') {
                             bgColor = 'bg-red-100';
@@ -254,14 +328,20 @@ async function showIssueDetails(issueId) {
                         } else if(label.toLowerCase() === 'help wanted') {
                             bgColor = 'bg-yellow-100';
                             textColor = 'text-yellow-700';
+                        } else if(label.toLowerCase() === 'feature') {
+                            bgColor = 'bg-blue-100';
+                            textColor = 'text-blue-600';
+                        } else if(label.toLowerCase() === 'documentation') {
+                            bgColor = 'bg-purple-100';
+                            textColor = 'text-purple-600';
                         } else {
                             bgColor = 'bg-gray-100';
                             textColor = 'text-gray-700';
                         }
                         
                         return `
-                            <span class="${bgColor} ${textColor} px-3 py-1 rounded-full text-sm font-medium">
-                                ${labelText}
+                            <span class="${bgColor} ${textColor} px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                                ${icon} ${labelText}
                             </span>
                         `;
                     }).join('')}
@@ -275,11 +355,17 @@ async function showIssueDetails(issueId) {
                 <!-- Bottom Info -->
                 <div class="bg-gray-100 rounded-lg p-4 flex justify-between items-center">
                     <div>
-                        <p class="text-sm text-gray-500">Assignee:</p>
-                        <p class="font-semibold text-gray-800">${issue.assignee || issue.author}</p>
+                        <p class="text-sm text-gray-500 flex items-center gap-1">
+                            <i class="far fa-user"></i> Assignee:
+                        </p>
+                        <p class="font-semibold text-gray-800 flex items-center gap-1">
+                            <i class="fas fa-user-check text-gray-600"></i> ${issue.assignee || issue.author}
+                        </p>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-500 mb-1">Priority:</p>
+                        <p class="text-sm text-gray-500 mb-1 flex items-center gap-1">
+                            <i class="fas fa-flag"></i> Priority:
+                        </p>
                         <span class="${priorityBadgeClass} text-xs px-3 py-1 rounded-full font-semibold">
                             ${priorityText}
                         </span>
@@ -288,8 +374,8 @@ async function showIssueDetails(issueId) {
 
                 <!-- Button -->
                 <div class="flex justify-end mt-6">
-                    <button onclick="document.getElementById('issueModal').close()" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-md font-medium hover:opacity-90">
-                        Close
+                    <button onclick="document.getElementById('issueModal').close()" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-md font-medium hover:opacity-90 flex items-center gap-2">
+                        <i class="fas fa-times-circle"></i> Close
                     </button>
                 </div>
             </div>
@@ -311,7 +397,7 @@ async function showIssueDetails(issueId) {
 // =====================================================================
 
 function createModal() {
-    // মডালের HTML তৈরি করি - minimal structure
+    // মডালের HTML তৈরি করি
     const modalHTML = `
         <dialog id="issueModal" class="modal">
             <div class="modal-box w-11/12 max-w-3xl p-0 bg-transparent shadow-none">
